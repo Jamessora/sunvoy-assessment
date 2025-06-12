@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { writeFile, readFile } from 'fs/promises';
 import dotenv from 'dotenv';
 dotenv.config();
