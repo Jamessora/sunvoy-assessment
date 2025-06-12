@@ -3,6 +3,9 @@ import { writeFile, readFile } from 'fs/promises';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const BASE_URL = process.env.BASE_URL!;
+const API_URL = process.env.API_URL!;
+
 const COOKIE_STORE = '.cookie';
 
 function formatCookieHeader(raw: string): string {
@@ -20,7 +23,7 @@ async function login(): Promise<string> {
   } catch {}
 
   console.log('Fetching login page…');
-  const pageResponse = await fetch('https://challenge.sunvoy.com/login');
+  const pageResponse = await fetch(`${BASE_URL}/login`);
   const rawCsrfCookie = pageResponse.headers.get('set-cookie');
   console.log('Received CSRF cookie:', rawCsrfCookie);
 
@@ -39,7 +42,7 @@ async function login(): Promise<string> {
   });;
 
   console.log('Signing in');
-  const postResponse = await fetch('https://challenge.sunvoy.com/login', {
+  const postResponse = await fetch(`${BASE_URL}/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -65,7 +68,7 @@ async function login(): Promise<string> {
 
 async function fetchUsers(cookie: string): Promise<any[]> {
   console.log('Fetching all users');
-  const response = await fetch('https://challenge.sunvoy.com/api/users', {
+  const response = await fetch(`${BASE_URL}/api/users`, {
     method: 'POST',
     headers: { 
       Cookie: cookie, 
@@ -80,7 +83,7 @@ async function fetchUsers(cookie: string): Promise<any[]> {
 
 async function fetchTokenData(cookie: string) {
   console.log('Fetching token data');
-  const response = await fetch('https://challenge.sunvoy.com/settings/tokens', {
+  const response = await fetch(`${BASE_URL}/settings/tokens`, {
     headers: { Cookie: cookie, Accept: 'text/html' },
   });
   if (!response.ok) throw new Error(`Token page failed (${response.status})`);
@@ -132,7 +135,7 @@ async function fetchCurrentUser(cookie: string) {
   const tokenData = await fetchTokenData(cookie);
   const { signedPayload } = createSignedPayload(tokenData);
 
-  const response = await fetch('https://api.challenge.sunvoy.com/api/settings', {
+  const response = await fetch(`${API_URL}/api/settings`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
