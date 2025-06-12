@@ -77,9 +77,37 @@ async function fetchUsers(cookie: string): Promise<any[]> {
   return users;
 }
 
+async function fetchTokenData(cookie: string) {
+  console.log('Fetching token data');
+  const response = await fetch('https://challenge.sunvoy.com/settings/tokens', {
+    headers: { Cookie: cookie, Accept: 'text/html' },
+  });
+  if (!response.ok) throw new Error(`Token page failed (${response.status})`);
+
+  const html = await response.text();
+  const pick = (id: string) => {
+    const m = html.match(new RegExp(`id="${id}"\\s+value="([^"]+)"`));
+    if (!m) throw new Error(`Token "${id}" missing`);
+    return m[1];
+  };
+
+  const tokenData = {
+    access_token: pick('access_token'),
+    apiuser:      pick('apiuser'),
+    language:     pick('language'),
+    openId:       pick('openId'),
+    operateId:    pick('operateId'),
+    userId:       pick('userId'),
+  };
+
+  console.log('Parsed token data:', tokenData);
+  return tokenData;
+}
+
 async function main() {
   const cookie = await login();
   const users = await fetchUsers(cookie);
+  const tokenData = await fetchTokenData(cookie);
 }
 
 main().catch(err => {
