@@ -4,6 +4,12 @@ dotenv.config();
 
 const COOKIE_STORE = '.cookie';
 
+function formatCookieHeader(raw: string): string {
+  return raw
+    .split(',')
+    .map(entry => entry.split(';')[0].trim())
+    .join('; ');
+}
 
 async function login(): Promise<string> {
   try {
@@ -14,8 +20,8 @@ async function login(): Promise<string> {
 
   console.log('Fetching login page…');
   const pageResponse = await fetch('https://challenge.sunvoy.com/login');
-  const csrfCookie = pageResponse.headers.get('set-cookie');
-  console.log('Received CSRF cookie:', csrfCookie);
+  const rawCsrfCookie = pageResponse.headers.get('set-cookie');
+  console.log('Received CSRF cookie:', rawCsrfCookie);
 
   const html = await pageResponse.text();
   const match = html.match(/name="nonce" value="([^"]+)"/);
@@ -25,17 +31,18 @@ async function login(): Promise<string> {
   const nonce = match[1];
   console.log('Extracted nonce:', nonce);
 
-  const form = new URLSearchParams();
-  form.append('nonce', nonce);
-  form.append('username', process.env.USER_EMAIL!);
-  form.append('password', process.env.USER_PASSWORD!);
+  const form = new URLSearchParams({
+    nonce,
+    username: process.env.USER_EMAIL!,
+    password: process.env.USER_PASSWORD!,
+  });;
 
   console.log('Signing in');
   const postResponse = await fetch('https://challenge.sunvoy.com/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Cookie': csrfCookie || '',
+      'Cookie': rawCsrfCookie || '',
     },
     body: form.toString(),
     redirect: 'manual',
@@ -48,9 +55,11 @@ async function login(): Promise<string> {
     throw new Error(`Login failed (status ${postResponse.status})`);
   }
 
-  await writeFile(COOKIE_STORE, authCookie);
+  const formattedAuthCookie = formatCookieHeader(authCookie)
+
+  await writeFile(COOKIE_STORE, formattedAuthCookie);
   console.log('Auth cookie saved to', COOKIE_STORE);
-  return authCookie;
+  return formattedAuthCookie;
 }
 
 async function main() {
