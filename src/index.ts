@@ -168,7 +168,7 @@ async function main() {
   const cookie = await login();
   const users = await fetchUsers(cookie);
   const currentUserProfile = await fetchCurrentUser(cookie);
-  users.push({ currentUser: currentUserProfile });
+  users.push( currentUserProfile );
   await writeFile('users.json', JSON.stringify(users, null, 2));
   console.log(`Retrieved ${users.length} users, written in users.json.`);
 }
