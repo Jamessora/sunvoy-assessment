@@ -1,0 +1,32 @@
+{
+  "name": "sunvoy",
+  "version": "1.0.0",
+  "description": "To reverse engineer a legacy web application that does not have a public API available. Get the list of users and the currently logged in users details.",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jamessora/sunvoy-assessment.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jamessora/sunvoy-assessment/issues"
+  },
+  "homepage": "https://github.com/Jamessora/sunvoy-assessment#readme",
+  "dependencies": {
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  }
+}
