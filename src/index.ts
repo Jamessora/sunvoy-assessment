@@ -105,10 +105,60 @@ async function fetchTokenData(cookie: string) {
   return tokenData;
 }
 
+function createSignedPayload(t: Record<string, string>) {
+  // To pass the Unix Epoch time in seconds
+  const timestamp = Math.floor(Date.now() / 1e3);
+
+  const data: Record<string, string> = { ...t, timestamp: timestamp.toString() };
+
+  const payload = Object.keys(data)
+    .sort()
+    .map((k: string) => `${k}=${encodeURIComponent(data[k])}`)
+    .join('&');
+  
+  const hmac = crypto.createHmac('sha1', 'mys3cr3t');
+
+  hmac.update(payload);
+
+  const checkcode = hmac.digest('hex').toUpperCase();
+  const signedPayload = `${payload}&checkcode=${checkcode}`
+
+  console.log( 'Created signedPayload:', signedPayload);
+
+  return { signedPayload };
+}
+
+async function fetchCurrentUser(cookie: string) {
+  const tokenData = await fetchTokenData(cookie);
+  const { signedPayload } = createSignedPayload(tokenData);
+
+  const response = await fetch('https://api.challenge.sunvoy.com/api/settings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Cookie: cookie,
+      Accept: 'application/json',
+    },
+    body: signedPayload,
+  });
+
+  console.log('/api/settings POST status:', response.status);
+
+  if (!response.ok) throw new Error(`Profile fetch failed (${response.status})`);
+
+  const currentUser = await response.json();
+
+  console.log('Retrieved current user:', currentUser);
+  return currentUser;
+}
+
 async function main() {
   const cookie = await login();
   const users = await fetchUsers(cookie);
-  const tokenData = await fetchTokenData(cookie);
+  const currentUserProfile = await fetchCurrentUser(cookie);
+  users.push({ currentUser: currentUserProfile });
+  await writeFile('users.json', JSON.stringify(users, null, 2));
+  console.log(`Retrieved ${users.length} users, written in users.json.`);
 }
 
 main().catch(err => {
